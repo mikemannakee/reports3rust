@@ -1,4 +1,5 @@
 use std::env;
+use std::ffi::OsStr;
 use image::{GenericImageView, DynamicImage};
 use anyhow::Result;
 
@@ -64,7 +65,9 @@ fn main() -> Result<()> {
 		eprintln!("Usage: {} (argument) the name of the unique ID forming the name of the PHP file to fetch the image from. \nE.g. '684d9da4221e2' will fetch the image from 'report_svg-684d9da4221e2.php'", args[0]);
 		return Ok(());
 	}
+	// Add the --no-sandbox flag to the launch options
 	let options = LaunchOptions::default_builder()
+		.args(vec![OsStr::new("--no-sandbox")])
 		.build()
 		.expect("Couldn't find appropriate Chrome binary.");
 	let browser = Browser::new(options)?;
