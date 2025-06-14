@@ -1,6 +1,5 @@
 use std::fs;
 use std::env;
-
 use anyhow::Result;
 
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
