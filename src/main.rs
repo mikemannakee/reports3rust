@@ -81,7 +81,8 @@ fn main() -> Result<()> {
 	
 	eprintln!("Navigating to {}", &path);
 	
-	let mut filename = args[1].to_string();
+	let mut filename = "/home/reports3/public_html/".to_owned();
+	filename.push_str(&args[1]);
 	filename.push_str(".png");
 	let png_data = tab
 		.navigate_to(&path)?
