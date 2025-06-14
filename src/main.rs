@@ -65,6 +65,7 @@ fn main() -> Result<()> {
 		eprintln!("Usage: {} (argument) the name of the unique ID forming the name of the PHP file to fetch the image from. \nE.g. '684d9da4221e2' will fetch the image from 'report_svg-684d9da4221e2.php'", args[0]);
 		return Ok(());
 	}
+	eprintln!("Starting browser");
 	// Add the --no-sandbox flag to the launch options
 	let options = LaunchOptions::default_builder()
 		.args(vec![OsStr::new("--no-sandbox")])
@@ -77,6 +78,9 @@ fn main() -> Result<()> {
 	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
 	path.push_str(&args[1]);
 	path.push_str(".php");
+	
+	eprintln!("Navigating to {}", &path);
+	
 	let mut filename = args[1].to_string();
 	filename.push_str(".png");
 	let png_data = tab
