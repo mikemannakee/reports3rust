@@ -126,6 +126,9 @@ fn main() -> Result<()> {
 						
 						println!("Screenshot successfully created. Saved to {}", &filename);
 
+						// Close the tab
+						tab.close(false)?;
+
 						// Add the id to the handled_ids vector
 						handled_ids.push(id.clone());
 					}
