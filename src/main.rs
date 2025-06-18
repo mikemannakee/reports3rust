@@ -1,4 +1,4 @@
-use use std::fs;
+use std::fs;
 use std::ffi::OsStr;
 use image::{GenericImageView, DynamicImage};
 use notify::{recommended_watcher, Event, RecursiveMode, Watcher};
