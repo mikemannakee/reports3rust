@@ -98,7 +98,9 @@ fn main() -> Result<()> {
 						continue;
 					}
 					if !handled_ids.contains(&id) {
-						
+						// Add the id to the handled_ids vector
+						handled_ids.push(id.clone());
+
 						eprintln!("Handling ID: {}", &id);
 
 						// Navigate to the report URL and wait for the page to load
@@ -129,9 +131,6 @@ fn main() -> Result<()> {
 
 						// Close the tab
 						tab.close(false)?;
-
-						// Add the id to the handled_ids vector
-						handled_ids.push(id.clone());
 
 						// Clear out the ids file
 						if !clearing_file {
