@@ -98,4 +98,5 @@ fn main() -> Result<()> {
 
 	println!("Screenshots successfully created.");
 	Ok(())
+	
 }
