@@ -5,9 +5,15 @@ use std::ffi::OsStr;
 use image::{GenericImageView, DynamicImage};
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
 use rocket::{Request, State};
+use rocket::http::uri::Host;
 
 #[get("/chart/<id>")]
-async fn chart(id: &str, browser: &State<Browser>) -> Result<String, rocket::http::Status> {
+async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<String, rocket::http::Status> {
+	// Bail out if the request is not from reports3.hrstapp.com
+	eprintln!("Host: {}", host);
+	if host != "reports3.hrstapp.com" && host != "127.0.0.1:8000" {
+		return Err(rocket::http::Status::Unauthorized);
+	}
 	eprintln!("Received request for chart with ID: {}", &id);
 
 	let tab = browser.new_tab().map_err(|_| rocket::http::Status::InternalServerError)?;
