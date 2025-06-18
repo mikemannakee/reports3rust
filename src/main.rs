@@ -1,9 +1,73 @@
-use std::env;
+#[macro_use]
+extern crate rocket;
+
 use std::ffi::OsStr;
 use image::{GenericImageView, DynamicImage};
-use anyhow::Result;
-
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
+use rocket::{Request, State};
+
+#[get("/chart/<id>")]
+async fn chart(id: &str, browser: &State<Browser>) -> Result<String, rocket::http::Status> {
+	eprintln!("Received request for chart with ID: {}", &id);
+
+	let tab = browser.new_tab().map_err(|_| rocket::http::Status::InternalServerError)?;
+	eprintln!("New tab created");
+
+	// Browse to the Report URL and wait for the page to load
+	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
+	path.push_str(&id);
+	path.push_str(".php");
+	
+	eprintln!("Navigating to {}", &path);
+	
+	// Detect if we are running on Windows or Linux
+	#[cfg(windows)]
+	let mut filename = "D:\\htdocs\\Larry\\HRST\\Reports3Rust\\".to_string();
+	#[cfg(not(windows))]
+	let mut filename = "/home/reports3/public_html/".to_owned();
+	filename.push_str(&id);
+	filename.push_str(".png");
+	let png_data = tab
+		.navigate_to(&path)
+		.map_err(|_| rocket::http::Status::InternalServerError)?
+		.wait_for_element("svg")
+		.map_err(|_| rocket::http::Status::InternalServerError)?
+		.capture_screenshot(CaptureScreenshotFormatOption::Png)
+		.map_err(|_| rocket::http::Status::InternalServerError)?;
+	eprintln!("Screenshot captured");
+
+	// Load the image and crop white borders
+	let img = image::load_from_memory(&png_data).map_err(|_| rocket::http::Status::InternalServerError)?;
+	let cropped_img = crop_white_borders(img);
+	
+	// Save the cropped image
+	cropped_img.save(&filename).map_err(|_| rocket::http::Status::InternalServerError)?;
+
+	println!("Screenshots successfully created.");
+	Ok("image saved".to_string())
+}
+
+#[catch(500)]
+fn internal_server_error(req: &Request<'_>) -> String {
+	format!("Internal server error: {:?}", req.uri())
+}
+
+#[launch]
+fn rocket() -> _ {
+	eprintln!("Starting browser");
+	// Add the --no-sandbox flag to the launch options
+	let options = LaunchOptions::default_builder()
+		.args(vec![OsStr::new("--no-sandbox")])
+		.build()
+		.expect("Couldn't find appropriate Chrome binary.");
+	let browser = Browser::new(options).unwrap();
+	
+	rocket::build()
+		.manage(browser)
+		.mount("/", routes![chart])
+		.register("/", catchers![internal_server_error])
+
+}
 
 fn crop_white_borders(img: DynamicImage) -> DynamicImage {
 	let (width, height) = img.dimensions();
@@ -59,44 +123,34 @@ fn crop_white_borders(img: DynamicImage) -> DynamicImage {
 	img.crop_imm(left, top, right - left, bottom - top)
 }
 
-fn main() -> Result<()> {
-	let args = env::args().collect::<Vec<String>>();
-	if args.len() != 2 {
-		eprintln!("Usage: {} (argument) the name of the unique ID forming the name of the PHP file to fetch the image from. \nE.g. '684d9da4221e2' will fetch the image from 'report_svg-684d9da4221e2.php'", args[0]);
-		return Ok(());
-	}
-	eprintln!("Starting browser");
-	// Add the --no-sandbox flag to the launch options
-	let options = LaunchOptions::default_builder()
-		.args(vec![OsStr::new("--no-sandbox")])
-		.build()
-		.expect("Couldn't find appropriate Chrome binary.");
-	let browser = Browser::new(options)?;
-	let tab = browser.new_tab()?;
+// fn main() -> Result<()> {
 	
-	// Browse to the Report URL and wait for the page to load
-	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
-	path.push_str(&args[1]);
-	path.push_str(".php");
 	
-	eprintln!("Navigating to {}", &path);
+// 	let tab = browser.new_tab()?;
 	
-	let mut filename = "/home/reports3/public_html/".to_owned();
-	filename.push_str(&args[1]);
-	filename.push_str(".png");
-	let png_data = tab
-		.navigate_to(&path)?
-		.wait_for_element("svg")?
-		.capture_screenshot(CaptureScreenshotFormatOption::Png)?;
+// 	// Browse to the Report URL and wait for the page to load
+// 	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
+// 	path.push_str(&args[1]);
+// 	path.push_str(".php");
+	
+// 	eprintln!("Navigating to {}", &path);
+	
+// 	let mut filename = "/home/reports3/public_html/".to_owned();
+// 	filename.push_str(&args[1]);
+// 	filename.push_str(".png");
+// 	let png_data = tab
+// 		.navigate_to(&path)?
+// 		.wait_for_element("svg")?
+// 		.capture_screenshot(CaptureScreenshotFormatOption::Png)?;
 
-	// Load the image and crop white borders
-	let img = image::load_from_memory(&png_data)?;
-	let cropped_img = crop_white_borders(img);
+// 	// Load the image and crop white borders
+// 	let img = image::load_from_memory(&png_data)?;
+// 	let cropped_img = crop_white_borders(img);
 	
-	// Save the cropped image
-	cropped_img.save(&filename)?;
+// 	// Save the cropped image
+// 	cropped_img.save(&filename)?;
 
-	println!("Screenshots successfully created.");
-	Ok(())
+// 	println!("Screenshots successfully created.");
+// 	Ok(())
 	
-}
+// }
