@@ -137,6 +137,8 @@ fn main() -> Result<()> {
 						if !clearing_file {
 							clearing_file = true;
 							fs::write(&watched_file, "")?;
+							eprintln!("Cleared out the ids file");
+							clearing_file = false;
 						}
 					}
 				}
