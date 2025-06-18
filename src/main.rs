@@ -80,6 +80,7 @@ fn main() -> Result<()> {
 	let browser = Browser::new(options).unwrap();
 
 	let mut handled_ids: Vec<String> = Vec::new();
+	let mut clearing_file = false;
 
 	for event in rx {
 		match event {
@@ -93,7 +94,7 @@ fn main() -> Result<()> {
 				// Go through the ids and check if they have been handled
 				for id in ids.split("\n") {
 					let id = id.trim().to_string();
-					if id.is_empty() {
+					if id.is_empty() || clearing_file {
 						continue;
 					}
 					if !handled_ids.contains(&id) {
@@ -131,6 +132,12 @@ fn main() -> Result<()> {
 
 						// Add the id to the handled_ids vector
 						handled_ids.push(id.clone());
+
+						// Clear out the ids file
+						if !clearing_file {
+							clearing_file = true;
+							fs::write(&watched_file, "")?;
+						}
 					}
 				}
 			}
