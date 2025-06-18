@@ -1,7 +1,10 @@
-use std::env;
+use use std::fs;
 use std::ffi::OsStr;
 use image::{GenericImageView, DynamicImage};
+use notify::{recommended_watcher, Event, RecursiveMode, Watcher};
 use anyhow::Result;
+use std::sync::mpsc;
+use std::path::Path;
 
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
 
@@ -60,42 +63,82 @@ fn crop_white_borders(img: DynamicImage) -> DynamicImage {
 }
 
 fn main() -> Result<()> {
-	let args = env::args().collect::<Vec<String>>();
-	if args.len() != 2 {
-		eprintln!("Usage: {} (argument) the name of the unique ID forming the name of the PHP file to fetch the image from. \nE.g. '684d9da4221e2' will fetch the image from 'report_svg-684d9da4221e2.php'", args[0]);
-		return Ok(());
-	}
+	let (tx, rx) = mpsc::channel::<Result<Event, notify::Error>>();
+	let mut watcher = recommended_watcher(tx)?;
+	// let root_path = "D:\\htdocs\\Larry\\HRST\\Reports3Rust\\".to_string();
+	let watched_file = "/home/reports3/rust/ids".to_string();
+	let file_save_path = "/home/reports3/public_html/".to_string();
+	watcher.watch(Path::new(&watched_file), RecursiveMode::Recursive)?;
+	eprintln!("Watching for changes in the current directory");
+
 	eprintln!("Starting browser");
 	// Add the --no-sandbox flag to the launch options
 	let options = LaunchOptions::default_builder()
 		.args(vec![OsStr::new("--no-sandbox")])
 		.build()
 		.expect("Couldn't find appropriate Chrome binary.");
-	let browser = Browser::new(options)?;
-	let tab = browser.new_tab()?;
-	
-	// Browse to the Report URL and wait for the page to load
-	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
-	path.push_str(&args[1]);
-	path.push_str(".php");
-	
-	eprintln!("Navigating to {}", &path);
-	
-	let mut filename = "/home/reports3/public_html/".to_owned();
-	filename.push_str(&args[1]);
-	filename.push_str(".png");
-	let png_data = tab
-		.navigate_to(&path)?
-		.wait_for_element("svg")?
-		.capture_screenshot(CaptureScreenshotFormatOption::Png)?;
+	let browser = Browser::new(options).unwrap();
 
-	// Load the image and crop white borders
-	let img = image::load_from_memory(&png_data)?;
-	let cropped_img = crop_white_borders(img);
-	
-	// Save the cropped image
-	cropped_img.save(&filename)?;
+	let mut handled_ids: Vec<String> = Vec::new();
 
-	println!("Screenshots successfully created.");
+	for event in rx {
+		match event {
+			Ok(event) => {
+				eprintln!("Event: {:?}", event);
+
+				// Read in the ids.txt file
+				let ids = fs::read_to_string(&watched_file)?;
+				eprintln!("IDs: {}", &ids);
+
+				// Go through the ids and check if they have been handled
+				for id in ids.split("\n") {
+					let id = id.trim().to_string();
+					if id.is_empty() {
+						continue;
+					}
+					if !handled_ids.contains(&id) {
+						
+						eprintln!("Handling ID: {}", &id);
+
+						// Navigate to the report URL and wait for the page to load
+						let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
+						path.push_str(&id);
+						path.push_str(".php");
+
+						eprintln!("Navigating to {}", &path);
+
+						let mut filename = file_save_path.clone();
+						filename.push_str(&id);
+						filename.push_str(".png");
+
+						let tab = browser.new_tab()?;
+						
+						let png_data = tab
+							.navigate_to(&path)?
+							.wait_for_element("svg")?
+							.capture_screenshot(CaptureScreenshotFormatOption::Png)?;
+
+						let img = image::load_from_memory(&png_data)?;
+						let cropped_img = crop_white_borders(img);
+						
+						// Save the cropped image
+						cropped_img.save(&filename)?;
+						
+						println!("Screenshot successfully created. Saved to {}", &filename);
+
+						// Close the tab
+						tab.close(false)?;
+
+						// Add the id to the handled_ids vector
+						handled_ids.push(id.clone());
+					}
+				}
+			}
+			Err(e) => {
+				eprintln!("Error: {:?}", e);
+			}
+		}
+	}
+
 	Ok(())
 }
