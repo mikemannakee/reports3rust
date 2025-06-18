@@ -128,9 +128,6 @@ fn main() -> Result<()> {
 
 						// Add the id to the handled_ids vector
 						handled_ids.push(id.clone());
-
-						// Clear out the ids file
-						fs::write(&watched_file, "")?;
 					}
 				}
 			}
