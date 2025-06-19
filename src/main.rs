@@ -56,6 +56,9 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 #[catch(500)]
 fn internal_server_error(req: &Request<'_>) -> String {
 	format!("Internal server error: {:?}", req.uri())
+
+	// Shut down the process 
+	process::exit(1);
 }
 
 #[launch]
