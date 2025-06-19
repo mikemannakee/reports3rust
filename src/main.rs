@@ -72,10 +72,10 @@ fn rocket() -> _ {
 	let browser = Browser::new(options).unwrap();
 
 	// Clean out the /tmp directory using a command line command
-	let google = process::Command::new("rm").args(&["-rf", "/tmp/.com.google*"]).output();
+	let google = process::Command::new("rm").args(&["-Rf", "/tmp/.com.google*"]).output();
 	eprintln!("Google Chrome cache cleaned: {:?}", google);
 
-	let rust = process::Command::new("rm").args(&["-rf", "/tmp/rust-headless*"]).output();
+	let rust = process::Command::new("rm").args(&["-Rf", "/tmp/rust-headless*"]).output();
 	eprintln!("Rust headless cache cleaned: {:?}", rust);
 
 	
