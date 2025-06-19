@@ -2,7 +2,7 @@
 extern crate rocket;
 
 use std::ffi::OsStr;
-use std::{fs, process};
+use std::{process};
 use image::{GenericImageView, DynamicImage};
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
 use rocket::{Request, State};
