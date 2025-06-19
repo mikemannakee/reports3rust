@@ -16,7 +16,7 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 	}
 	eprintln!("Received request for chart with ID: {}", &id);
 
-	let tab = browser.new_tab().map_err(|_| rocket::http::Status::InternalServerError)?;
+	let tab = browser.new_tab().map_err(|e| eprintln!("Error creating new tab: {}", e))?;
 	eprintln!("New tab created");
 
 	// Browse to the Report URL and wait for the page to load
