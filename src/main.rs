@@ -2,6 +2,7 @@
 extern crate rocket;
 
 use std::ffi::OsStr;
+use std::process;
 use image::{GenericImageView, DynamicImage};
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
 use rocket::{Request, State};
@@ -54,9 +55,8 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 }
 
 #[catch(500)]
-fn internal_server_error(req: &Request<'_>) -> String {
-	format!("Internal server error: {:?}", req.uri())
-
+fn internal_server_error(req: &Request<'_>) -> () {
+	
 	// Shut down the process 
 	process::exit(1);
 }
