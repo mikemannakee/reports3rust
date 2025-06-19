@@ -131,35 +131,3 @@ fn crop_white_borders(img: DynamicImage) -> DynamicImage {
 
 	img.crop_imm(left, top, right - left, bottom - top)
 }
-
-// fn main() -> Result<()> {
-	
-	
-// 	let tab = browser.new_tab()?;
-	
-// 	// Browse to the Report URL and wait for the page to load
-// 	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
-// 	path.push_str(&args[1]);
-// 	path.push_str(".php");
-	
-// 	eprintln!("Navigating to {}", &path);
-	
-// 	let mut filename = "/home/reports3/public_html/".to_owned();
-// 	filename.push_str(&args[1]);
-// 	filename.push_str(".png");
-// 	let png_data = tab
-// 		.navigate_to(&path)?
-// 		.wait_for_element("svg")?
-// 		.capture_screenshot(CaptureScreenshotFormatOption::Png)?;
-
-// 	// Load the image and crop white borders
-// 	let img = image::load_from_memory(&png_data)?;
-// 	let cropped_img = crop_white_borders(img);
-	
-// 	// Save the cropped image
-// 	cropped_img.save(&filename)?;
-
-// 	println!("Screenshots successfully created.");
-// 	Ok(())
-	
-// }
