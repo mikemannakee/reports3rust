@@ -57,10 +57,6 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 
 #[catch(500)]
 fn internal_server_error(_req: &Request<'_>) -> () {
-	// Clean out the /tmp directory using a command line command
-	let _ = process::Command::new("rm").args(&["-rf", "/tmp/.com.google*"]).output().map_err(|_| rocket::http::Status::InternalServerError);
-	_ = process::Command::new("rm").args(&["-rf", "/tmp/rust-headless*"]).output().map_err(|_| rocket::http::Status::InternalServerError);
-
 	// Shut down the process 
 	process::exit(1);
 }
@@ -74,6 +70,14 @@ fn rocket() -> _ {
 		.build()
 		.expect("Couldn't find appropriate Chrome binary.");
 	let browser = Browser::new(options).unwrap();
+
+	// Clean out the /tmp directory using a command line command
+	let google = process::Command::new("rm").args(&["-rf", "/tmp/.com.google*"]).output();
+	eprintln!("Google Chrome cache cleaned: {:?}", google);
+
+	let rust = process::Command::new("rm").args(&["-rf", "/tmp/rust-headless*"]).output();
+	eprintln!("Rust headless cache cleaned: {:?}", rust);
+
 	
 	rocket::build()
 		.manage(browser)
