@@ -2,7 +2,7 @@
 extern crate rocket;
 
 use std::ffi::OsStr;
-use std::process;
+use std::{fs, process};
 use image::{GenericImageView, DynamicImage};
 use headless_chrome::{Browser, LaunchOptions, protocol::cdp::Page::CaptureScreenshotFormatOption};
 use rocket::{Request, State};
@@ -51,6 +51,10 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 	cropped_img.save(&filename).map_err(|_| rocket::http::Status::InternalServerError)?;
 
 	println!("Screenshots successfully created.");
+
+	// Clean out the /tmp directory using a command line command
+	process::Command::new("rm").args(&["-rf", "/tmp/.com.goo*"]).output().map_err(|_| rocket::http::Status::InternalServerError)?;
+	
 	Ok("image saved".to_string())
 }
 
