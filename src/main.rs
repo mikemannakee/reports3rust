@@ -11,21 +11,21 @@ use rocket::http::uri::Host;
 #[get("/chart/<id>")]
 async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<String, rocket::http::Status> {
 	// Bail out if the request is not from reports3.hrstapp.com
-	eprintln!("Host: {}", host);
+	println!("Host: {}", host);
 	if host != "reports3.hrstapp.com" && host != "127.0.0.1:8000" {
 		return Err(rocket::http::Status::Unauthorized);
 	}
-	eprintln!("Received request for chart with ID: {}", &id);
+	println!("Received request for chart with ID: {}", &id);
 
 	let tab = browser.new_tab().map_err(|_| rocket::http::Status::InternalServerError)?;
-	eprintln!("New tab created");
+	println!("New tab created");
 
 	// Browse to the Report URL and wait for the page to load
 	let mut path = "https://reports3.hrstapp.com/report_svg-".to_owned();
 	path.push_str(&id);
 	path.push_str(".php");
 	
-	eprintln!("Navigating to {}", &path);
+	println!("Navigating to {}", &path);
 	
 	// Detect if we are running on Windows or Linux
 	#[cfg(windows)]
@@ -41,7 +41,7 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 		.map_err(|_| rocket::http::Status::InternalServerError)?
 		.capture_screenshot(CaptureScreenshotFormatOption::Png)
 		.map_err(|_| rocket::http::Status::InternalServerError)?;
-	eprintln!("Screenshot captured");
+	println!("Screenshot captured");
 
 	// Load the image and crop white borders
 	let img = image::load_from_memory(&png_data).map_err(|_| rocket::http::Status::InternalServerError)?;
@@ -55,7 +55,7 @@ async fn chart(id: &str, host: &Host<'_>, browser: &State<Browser>) -> Result<St
 }
 
 #[catch(500)]
-fn internal_server_error(req: &Request<'_>) -> () {
+fn internal_server_error(_req: &Request<'_>) -> () {
 	
 	// Shut down the process 
 	process::exit(1);
